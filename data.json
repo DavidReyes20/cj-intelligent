@@ -1,0 +1,12 @@
+{
+  "santiago": {
+    "usuario": "santiago",
+    "clave": "12345s",
+    "rol": "Profesor"
+  },
+  "david": {
+    "usuario": "david",
+    "clave": "12345d",
+    "rol": "Usuario"
+  }
+}

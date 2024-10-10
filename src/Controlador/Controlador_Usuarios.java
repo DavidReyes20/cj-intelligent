@@ -48,7 +48,7 @@ public class Controlador_Usuarios {
                                     int buscar=v.buscarPor();
 
                                     if(buscar==1){
-                                        v.imprimir(lista_gestion.buscarNombre(v.capturaStrBuscar()));
+                                        v.imprimir(lista_gestion.buscarCodigo(v.capturaStrBuscar()));
                                     }
                                     if(buscar==2){
                                         v.imprimir(lista_gestion.buscarCodigo(v.capturaStrkey()));
@@ -105,7 +105,7 @@ public class Controlador_Usuarios {
                                 int buscar=v.buscarPor();
 
                                 if(buscar==1){
-                                    v.imprimir(lista_gestion.buscarNombre(v.capturaStrBuscar()));
+                                    v.imprimir(lista_gestion.buscarCodigo(v.capturaStrBuscar()));
                                 }
                                 if(buscar==2){
                                     v.imprimir(lista_gestion.buscarCodigo(v.capturaStrkey()));
@@ -202,7 +202,7 @@ public class Controlador_Usuarios {
                                             int buscar=v.buscarPor();
 
                                             if(buscar==1){
-                                                v.imprimir(lista_gestion.buscarNombre(v.capturaStrBuscar()));
+                                                v.imprimir(lista_gestion.buscarCodigo(v.capturaStrBuscar()));
                                             }
                                             if(buscar==2){
                                                 v.imprimir(lista_gestion.buscarCodigo(v.capturaStrkey()));
@@ -212,7 +212,7 @@ public class Controlador_Usuarios {
                                             v.imprimir( lista_gestion.modificarNombre(v.capturaACambiar(),v.cambioNombre()));
                                             break;
                                         case 4:
-                                            lista_gestion.Eliminar(v.capturaEleminar());
+                                            lista_gestion.eliminar(v.capturaEleminar());
                                             break;
                                         case 5:
                                             v.imprimir(lista_gestion.recorrerLista());
@@ -252,7 +252,7 @@ public class Controlador_Usuarios {
                                                     case  2:
                                                         String nombre = v.editarnombre();
                                                         String nuevoNombre = v.nombreeditada();
-                                                        hasmap.editarnombrea(nombre, nuevoNombre);
+                                                        hasmap.editarnombre(nombre, nuevoNombre);
                                                         break;
                                                     case  3:
                                                         String descripcion = v.editarDescripcion();
@@ -356,7 +356,7 @@ public class Controlador_Usuarios {
                                             int buscar=v.buscarPor();
 
                                             if(buscar==1){
-                                                v.imprimir(lista_gestion.buscarNombre(v.capturaStrBuscar()));
+                                                v.imprimir(lista_gestion.buscarCodigo(v.capturaStrBuscar()));
                                             }
                                             if(buscar==2){
                                                 v.imprimir(lista_gestion.buscarCodigo(v.capturaStrkey()));
@@ -366,7 +366,7 @@ public class Controlador_Usuarios {
                                             v.imprimir( lista_gestion.modificarNombre(v.capturaACambiar(),v.cambioNombre()));
                                             break;
                                         case 4:
-                                            lista_gestion.Eliminar(v.capturaEleminar());
+                                            lista_gestion.eliminar(v.capturaEleminar());
                                             break;
                                         case 5:
                                             v.imprimir(lista_gestion.recorrerLista());
@@ -405,7 +405,7 @@ public class Controlador_Usuarios {
                                                     case  2:
                                                         String nombre = v.editarnombre();
                                                         String nuevoNombre = v.nombreeditada();
-                                                        hasmap.editarnombrea(nombre, nuevoNombre);
+                                                        hasmap.editarnombre(nombre, nuevoNombre);
                                                         break;
                                                     case  3:
                                                         String descripcion = v.editarDescripcion();

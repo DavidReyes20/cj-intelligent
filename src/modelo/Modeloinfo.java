@@ -1,101 +1,166 @@
 package modelo;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
-
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.lang.reflect.Type;
+import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
 
-
 public class Modeloinfo {
 
+    private Connection conexion;
     public Map<String, Informacion> informacion = new HashMap<>();
 
-    Gson gson = new GsonBuilder().setPrettyPrinting().create();
-
-
     public Modeloinfo() {
-        Type tipoMap = new TypeToken<Map<String, Usuarios>>() {}.getType();
-        try (FileReader reader = new FileReader("informacion.json")) {
-            informacion = gson.fromJson(reader, tipoMap);
-            System.out.println("Datos cargados desde informacion.json");
-        } catch (IOException e) {
-            System.out.println("La tienda está vacía");
-        }
+        conexion = Conexion.Conecta(); // Usando la clase de conexión para la base de datos
+        System.out.println("Conexión establecida con la base de datos.");
     }
 
-
-    private void actualizarArchivoJson() {
-        try (FileWriter writer = new FileWriter("informacion.json")) {
-            gson.toJson(informacion, writer);
-            System.out.println("Datos escritos en informacion.json");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
+    // Método para agregar una noticia
     public String agregarnoticia(Informacion nombre) {
-        if (informacion.containsKey(nombre.getNombre())) {
-            return "El usuario ya se encuentra dentro del sistema";
-        } else {
-            informacion.put(nombre.getNombre(),nombre );
-            actualizarArchivoJson();
-            return "Noticia  registrado con éxito";
+        String mensaje;
+
+        try {
+            String query = "INSERT INTO Informacion (nombre, fecha, descripcion, rama) VALUES (?, ?, ?, ?)";
+            PreparedStatement ps = conexion.prepareStatement(query);
+            ps.setString(1, nombre.getNombre());
+            ps.setString(2, nombre.getFecha());
+            ps.setString(3, nombre.getDescripcion());
+            ps.setString(4, nombre.getRama());
+
+            int resultado = ps.executeUpdate();
+            if (resultado > 0) {
+                mensaje = "Noticia registrada con éxito.";
+            } else {
+                mensaje = "Error al registrar la noticia.";
+            }
+        } catch (SQLException e) {
+            mensaje = "Error al agregar noticia: " + e.getMessage();
         }
+
+        return mensaje;
     }
 
+    // Método para editar la fecha de una noticia
     public void editarFecha(String referencia, String nuevaFecha) {
-        if (informacion.containsKey(referencia)) {
-            informacion.get(referencia).setFecha(nuevaFecha);
-            actualizarArchivoJson(); // Guardar datos automáticamente
-        }
-    }
-    public void editarnombrea(String referencia, String nuevoNombre) {
-        if (informacion.containsKey(referencia)) {
-            informacion.get(referencia).setFecha(nuevoNombre);
-            actualizarArchivoJson(); // Guardar datos automáticamente
+        try {
+            String query = "UPDATE Informacion SET fecha = ? WHERE nombre = ?";
+            PreparedStatement ps = conexion.prepareStatement(query);
+            ps.setString(1, nuevaFecha);
+            ps.setString(2, referencia);
+
+            int resultado = ps.executeUpdate();
+            if (resultado > 0) {
+                System.out.println("Fecha actualizada correctamente.");
+            } else {
+                System.out.println("La noticia no se encontró.");
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al actualizar la fecha: " + e.getMessage());
         }
     }
 
+    // Método para editar el nombre de una noticia
+    public void editarnombre(String referencia, String nuevoNombre) {
+        try {
+            String query = "UPDATE Informacion SET nombre = ? WHERE nombre = ?";
+            PreparedStatement ps = conexion.prepareStatement(query);
+            ps.setString(1, nuevoNombre);
+            ps.setString(2, referencia);
+
+            int resultado = ps.executeUpdate();
+            if (resultado > 0) {
+                System.out.println("Nombre actualizado correctamente.");
+            } else {
+                System.out.println("La noticia no se encontró.");
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al actualizar el nombre: " + e.getMessage());
+        }
+    }
+
+    // Método para editar la descripción de una noticia
     public void editarDescripcion(String referencia, String nuevaDescripcion) {
-        if (informacion.containsKey(referencia)) {
-            informacion.get(referencia).setDescripcion(nuevaDescripcion);
-            actualizarArchivoJson(); // Guardar datos automáticamente
+        try {
+            String query = "UPDATE Informacion SET descripcion = ? WHERE nombre = ?";
+            PreparedStatement ps = conexion.prepareStatement(query);
+            ps.setString(1, nuevaDescripcion);
+            ps.setString(2, referencia);
+
+            int resultado = ps.executeUpdate();
+            if (resultado > 0) {
+                System.out.println("Descripción actualizada correctamente.");
+            } else {
+                System.out.println("La noticia no se encontró.");
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al actualizar la descripción: " + e.getMessage());
         }
     }
 
-
+    // Método para editar la rama de una noticia
     public void editarRama(String referencia, String nuevaRama) {
-        if (informacion.containsKey(referencia)) {
-            informacion.get(referencia).setRama(nuevaRama);
-            actualizarArchivoJson(); // Guardar datos automáticamente
-        }
-    }
-    public String eliminarNoticia(String nombreUsuario) {
-        if (informacion.remove(nombreUsuario) != null) {
-            actualizarArchivoJson();
-            return "Usuario eliminado correctamente";
-        } else {
-            return "El usuario no se encontró en el sistema";
+        try {
+            String query = "UPDATE Informacion SET rama = ? WHERE nombre = ?";
+            PreparedStatement ps = conexion.prepareStatement(query);
+            ps.setString(1, nuevaRama);
+            ps.setString(2, referencia);
+
+            int resultado = ps.executeUpdate();
+            if (resultado > 0) {
+                System.out.println("Rama actualizada correctamente.");
+            } else {
+                System.out.println("La noticia no se encontró.");
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al actualizar la rama: " + e.getMessage());
         }
     }
 
+    // Método para eliminar una noticia
+    public String eliminarNoticia(String nombreNoticia) {
+        String mensaje;
+
+        try {
+            String query = "DELETE FROM Informacion WHERE nombre = ?";
+            PreparedStatement ps = conexion.prepareStatement(query);
+            ps.setString(1, nombreNoticia);
+
+            int resultado = ps.executeUpdate();
+            if (resultado > 0) {
+                mensaje = "Noticia eliminada correctamente.";
+            } else {
+                mensaje = "La noticia no se encontró.";
+            }
+        } catch (SQLException e) {
+            mensaje = "Error al eliminar noticia: " + e.getMessage();
+        }
+
+        return mensaje;
+    }
+
+    // Método para mostrar todas las noticias
     public String mostrarLista() {
-        StringBuilder mostrarLista = new StringBuilder();
-        for (Informacion c : informacion.values()) {
-            mostrarLista.append(c.toString()).append("\n");
+        StringBuilder listaNoticias = new StringBuilder();
+
+        try {
+            String query = "SELECT * FROM Informacion";
+            Statement st = conexion.createStatement();
+            ResultSet rs = st.executeQuery(query);
+
+            while (rs.next()) {
+                String nombre = rs.getString("nombre");
+                String fecha = rs.getString("fecha");
+                String descripcion = rs.getString("descripcion");
+                String rama = rs.getString("rama");
+                listaNoticias.append("Nombre: ").append(nombre)
+                        .append(", Fecha: ").append(fecha)
+                        .append(", Descripción: ").append(descripcion)
+                        .append(", Rama: ").append(rama)
+                        .append("\n");
+            }
+        } catch (SQLException e) {
+            return "Error al mostrar la lista: " + e.getMessage();
         }
-        return mostrarLista.toString();
+
+        return listaNoticias.toString();
     }
-
-
-    //---------------------------------------------------------------------------------------------------------------
-
-
 }
-

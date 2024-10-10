@@ -30,9 +30,10 @@ public class Usuarios {
         this.usuario = usuario;
         this.clave = clave;
     }
-
     public void setClave(String clave) {
+        this.clave = clave; // Debes agregar esto
     }
+
 
     public Usuarios(String usuario, String clave, String rol) {
         this.usuario = usuario;

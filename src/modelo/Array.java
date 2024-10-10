@@ -1,101 +1,142 @@
 package modelo;
 
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
-
 import javax.swing.*;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.lang.reflect.Type;
+import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.sql.SQLException;
+
 
 public class Array {
 
+    private Connection conexion;
     public Map<String, Recursos> recursosLegales = new HashMap<>();
 
-    Gson gson = new GsonBuilder().setPrettyPrinting().create();
-
-    public Array(){
-        Type tipoMap = new TypeToken<Map<Integer,Recursos>>() {}.getType();
-        try (FileReader reader = new FileReader("recursos.json")) {
-            recursosLegales = gson.fromJson(reader, tipoMap);
-            System.out.println("Datos escritos en recursos.json");
-        }catch (IOException e) {
-            recursosLegales = new HashMap<>();
-            actualizarDatos();
-        }
+    public Array() {
+        conexion = Conexion.Conecta(); // Usa tu clase 'Conexion' para obtener la conexión
+        System.out.println("Conexión establecida con la base de datos.");
     }
 
-    private void actualizarDatos(){
-        try (FileWriter writer = new FileWriter("recursos.json")) {
-            gson.toJson(recursosLegales, writer);
-            System.out.println("Datos escritos en data.json");
-        }catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    private void actualizarDatos() {
+        // Este método no es necesario para la base de datos, pero podrías usarlo para actualizaciones específicas si fuera necesario.
     }
 
+    public String agregarRecurso(String codigo, Recursos recurso) {
+        String mensaje;
 
-    public String agregarRecurso(String codi ,Recursos pdt){
-        String mensaje = "";
-        boolean estaono = recursosLegales.containsKey(codi);
-        if (estaono == true){
-            JOptionPane.showInputDialog("el estudiante ya se encuentra ");
-        }else {
-            recursosLegales.put(codi,pdt);
-            actualizarDatos();
-            mensaje = ("Se agrego ");
+        try {
+            String query = "INSERT INTO RecursosLegales (codigo, recurso, escrito) VALUES (?, ?, ?)";
+            PreparedStatement ps = conexion.prepareStatement(query);
+            ps.setString(1, codigo);
+            ps.setString(2, recurso.getRecurso());
+            ps.setString(3, recurso.getEscrito());
+
+            int resultado = ps.executeUpdate();
+            if (resultado > 0) {
+                mensaje = "Recurso legal agregado con éxito.";
+            } else {
+                mensaje = "Error al agregar el recurso legal.";
+            }
+        } catch (SQLException e) {
+            mensaje = "Error en la inserción: " + e.getMessage();
         }
+
         return mensaje;
     }
 
-
     public String buscarRecursoLegal(int numero) {
-        boolean estaono = recursosLegales.containsKey(numero);
-        if (estaono == true) {
-            JOptionPane.showInputDialog("El recurso legal está presente en la lista.");
-            JOptionPane.showInputDialog(String.valueOf(recursosLegales.get(numero)));
-        } else {
-            JOptionPane.showInputDialog("El recurso legal no se encuentra en la lista.");
+        String mensaje = "";
+
+        try {
+            String query = "SELECT * FROM RecursosLegales WHERE id = ?";
+            PreparedStatement ps = conexion.prepareStatement(query);
+            ps.setInt(1, numero);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                String recurso = rs.getString("recurso");
+                String escrito = rs.getString("escrito");
+                mensaje = "Recurso encontrado: " + recurso + "\nEscrito: " + escrito;
+                JOptionPane.showInputDialog(mensaje);
+            } else {
+                mensaje = "El recurso legal no se encuentra en la lista.";
+                JOptionPane.showInputDialog(mensaje);
+            }
+        } catch (SQLException e) {
+            mensaje = "Error en la búsqueda: " + e.getMessage();
         }
-        return "";
+
+        return mensaje;
     }
 
-    public String modificarRecursoLegal(int numero, String nuevoRecurso,String nuevoEscrito) {
-        Recursos l = recursosLegales.get(numero);
-        if (l != null) {
-            l.setRecurso(nuevoRecurso);
-            l.setEscrito(nuevoEscrito);
-            JOptionPane.showInputDialog("Recurso legal modificado correctamente.");
-            actualizarDatos();
-        }else {
-            JOptionPane.showInputDialog("El recurso legal no se encuentra en la lista.");
+    public String modificarRecursoLegal(int numero, String nuevoRecurso, String nuevoEscrito) {
+        String mensaje;
+
+        try {
+            String query = "UPDATE RecursosLegales SET recurso = ?, escrito = ? WHERE id = ?";
+            PreparedStatement ps = conexion.prepareStatement(query);
+            ps.setString(1, nuevoRecurso);
+            ps.setString(2, nuevoEscrito);
+            ps.setInt(3, numero);
+
+            int resultado = ps.executeUpdate();
+            if (resultado > 0) {
+                mensaje = "Recurso legal modificado correctamente.";
+            } else {
+                mensaje = "El recurso legal no se encontró en la lista.";
+            }
+        } catch (SQLException e) {
+            mensaje = "Error en la actualización: " + e.getMessage();
         }
-        return "";
+
+        return mensaje;
     }
 
+    public String eliminarRecursoLegal(int numero) {
+        String mensaje;
 
+        try {
+            String query = "DELETE FROM RecursosLegales WHERE id = ?";
+            PreparedStatement ps = conexion.prepareStatement(query);
+            ps.setInt(1, numero);
 
-    public int eliminarRecursoLegal(int borrar) {
-
-        boolean estaono = recursosLegales.containsKey(borrar);
-        if (estaono == true) {
-            recursosLegales.remove(borrar);
-            JOptionPane.showInputDialog("Recurso legal eliminado correctamente.");
-            actualizarDatos();
-        }else {
-            JOptionPane.showInputDialog("El recurso legal no se encuentra en la lista.");
+            int resultado = ps.executeUpdate();
+            if (resultado > 0) {
+                mensaje = "Recurso legal eliminado correctamente.";
+            } else {
+                mensaje = "El recurso legal no se encontró en la lista.";
+            }
+        } catch (SQLException e) {
+            mensaje = "Error en la eliminación: " + e.getMessage();
         }
-        return 0;
+
+        return mensaje;
     }
 
-    public String recorrer(){
-        JOptionPane.showInputDialog(recursosLegales);
-        actualizarDatos();
-        return "";
+    public String recorrer() {
+        StringBuilder mensaje = new StringBuilder();
+
+        try {
+            String query = "SELECT * FROM RecursosLegales";
+            Statement st = conexion.createStatement();
+            ResultSet rs = st.executeQuery(query);
+
+            while (rs.next()) {
+                String codigo = rs.getString("codigo");
+                String recurso = rs.getString("recurso");
+                String escrito = rs.getString("escrito");
+
+                mensaje.append("Código: ").append(codigo)
+                        .append(", Recurso: ").append(recurso)
+                        .append(", Escrito: ").append(escrito)
+                        .append("\n");
+            }
+
+            JOptionPane.showInputDialog(mensaje.toString());
+        } catch (SQLException e) {
+            return "Error al recuperar los datos: " + e.getMessage();
+        }
+
+        return mensaje.toString();
     }
 }

@@ -1,87 +1,110 @@
 package modelo;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
-
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.lang.reflect.Type;
+import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
 
 
 public class gestionArray {
 
+
+    private Connection conexion;
     public Map<String, Usuarios> mapUsuarios = new HashMap<>();
 
-    Gson gson = new GsonBuilder().setPrettyPrinting().create();
-
-
     public gestionArray() {
-        Type tipoMap = new TypeToken<Map<String, Usuarios>>() {}.getType();
-        try (FileReader reader = new FileReader("data.json")) {
-            mapUsuarios = gson.fromJson(reader, tipoMap);
-            System.out.println("Datos cargados desde data.json");
-        } catch (IOException e) {
-            System.out.println("La tienda está vacía");
-        }
-    }
-
-
-    private void actualizarArchivoJson() {
-        try (FileWriter writer = new FileWriter("data.json")) {
-            gson.toJson(mapUsuarios, writer);
-            System.out.println("Datos escritos en data.json");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        conexion = Conexion.Conecta(); // Obtiene la conexión
+        if (conexion == null) {
+            System.out.println("Error: No se pudo establecer conexión a la base de datos.");
         }
     }
 
     public String agregarUsuario(Usuarios usuario) {
-        if (mapUsuarios.containsKey(usuario.getUsuario())) {
-            return "El usuario ya se encuentra dentro del sistema";
-        } else {
-            mapUsuarios.put(usuario.getUsuario(), usuario);
-            actualizarArchivoJson();
-            return "Usuario registrado con éxito";
+        String mensaje;
+        if (conexion == null) {
+            return "Error: No hay conexión a la base de datos.";
         }
+
+        try {
+            String query = "INSERT INTO Usuarios (usuario, clave, rol) VALUES (?, ?)";
+            PreparedStatement ps = conexion.prepareStatement(query);
+            ps.setString(1, usuario.getUsuario());
+            ps.setString(2, usuario.getClave());
+
+            int resultado = ps.executeUpdate();
+            if (resultado > 0) {
+                mensaje = "Usuario registrado con éxito.";
+            } else {
+                mensaje = "Error al registrar el usuario.";
+            }
+        } catch (SQLException e) {
+            mensaje = "Error al agregar usuario: " + e.getMessage();
+        }
+        return mensaje;
     }
 
     public String modificarUsuario(String nombreUsuario, String nuevoNombreUsuario, String nuevaClave) {
-        Usuarios usuarioExistente = mapUsuarios.get(nombreUsuario);
-        if (usuarioExistente != null) {
-            mapUsuarios.remove(nombreUsuario);
-            usuarioExistente.setUsuario(nuevoNombreUsuario);
-            usuarioExistente.setClave(nuevaClave);
-            mapUsuarios.put(nuevoNombreUsuario, usuarioExistente);
-            actualizarArchivoJson();
-            return "Usuario modificado correctamente";
-        } else {
-            return "El usuario no se encontró en el sistema";
+        String mensaje;
+
+        try {
+            String query = "UPDATE Usuarios SET usuario = ?, clave = ? WHERE usuario = ?";
+            PreparedStatement ps = conexion.prepareStatement(query);
+            ps.setString(1, nuevoNombreUsuario);
+            ps.setString(2, nuevaClave);
+            ps.setString(3, nombreUsuario);
+
+            int resultado = ps.executeUpdate();
+            if (resultado > 0) {
+                mensaje = "Usuario modificado correctamente.";
+            } else {
+                mensaje = "El usuario no se encontró en el sistema.";
+            }
+        } catch (SQLException e) {
+            mensaje = "Error al modificar usuario: " + e.getMessage();
         }
+
+        return mensaje;
     }
 
     public String eliminarUsuario(String nombreUsuario) {
-        if (mapUsuarios.remove(nombreUsuario) != null) {
-            actualizarArchivoJson();
-            return "Usuario eliminado correctamente";
-        } else {
-            return "El usuario no se encontró en el sistema";
+        String mensaje;
+
+        try {
+            String query = "DELETE FROM Usuarios WHERE usuario = ?";
+            PreparedStatement ps = conexion.prepareStatement(query);
+            ps.setString(1, nombreUsuario);
+
+            int resultado = ps.executeUpdate();
+            if (resultado > 0) {
+                mensaje = "Usuario eliminado correctamente.";
+            } else {
+                mensaje = "El usuario no se encontró en el sistema.";
+            }
+        } catch (SQLException e) {
+            mensaje = "Error al eliminar usuario: " + e.getMessage();
         }
+
+        return mensaje;
     }
 
     public String mostrarLista() {
-        StringBuilder mostrarLista = new StringBuilder();
-        for (Usuarios c : mapUsuarios.values()) {
-            mostrarLista.append(c.toString()).append("\n");
+        StringBuilder listaUsuarios = new StringBuilder();
+
+        try {
+            String query = "SELECT * FROM Usuarios";
+            Statement st = conexion.createStatement();
+            ResultSet rs = st.executeQuery(query);
+
+            while (rs.next()) {
+                String usuario = rs.getString("usuario");
+                String clave = rs.getString("clave");
+                listaUsuarios.append("Usuario: ").append(usuario)
+                        .append(", Clave: ").append(clave)
+                        .append("\n");
+            }
+        } catch (SQLException e) {
+            return "Error al mostrar la lista: " + e.getMessage();
         }
-        return mostrarLista.toString();
+
+        return listaUsuarios.toString();
     }
-
-
-    //---------------------------------------------------------------------------------------------------------------
-
-
 }
